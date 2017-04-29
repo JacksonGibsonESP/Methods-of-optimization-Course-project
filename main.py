@@ -2,6 +2,7 @@ from sympy import *
 import numpy as np
 from numpy.linalg import inv
 
+e = 0.01
 n = 9
 d = 20
 l1 = 5
@@ -24,7 +25,7 @@ c1 = Symbol('c1')
 c2 = Symbol('c2')
 c3 = Symbol('c3')
 
-x = [a1, a2, a3, b1, b2, b3, c1, c2, c3]
+vars = [a1, a2, a3, b1, b2, b3, c1, c2, c3]
 
 f1 = (a1 - b1) ** 2 + (a2 - b2) ** 2 + (a3 - b3) ** 2 - d ** 2
 f2 = (a1 - c1) ** 2 + (a2 - c2) ** 2 + (a3 - c3) ** 2 - d ** 2
@@ -40,39 +41,60 @@ F = [f1, f2, f3, f4, f5, f6, f7, f8, f9]
 F_lambda = []
 
 for l in range(n):
-    F_lambda.append(lambdify(x, F[l], 'numpy'))
+    F_lambda.append(lambdify(vars, F[l], 'numpy'))
 
-vec = [0, 0, 5, 10, 17.32050807568877, 5, 20, 0, 5]
-
-print(sqrt(F_lambda[0](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[1](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[2](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[3](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[4](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[5](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[6](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[7](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
-print(sqrt(F_lambda[8](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8])))
+# print(sqrt(F_lambda[0](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[1](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[2](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[3](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[4](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[5](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[6](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[7](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
+# print(sqrt(F_lambda[8](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])))
 
 F1 = [[] for i in range(n)]
 F1_lambda = [[] for k in range(n)]
 
 for i in range(n):
     for l in range(n):
-        F1[i].append(F[i].diff(x[l]))
-        F1_lambda[i].append(lambdify(x, F1[i][l], 'numpy'))
+        F1[i].append(F[i].diff(vars[l]))
+        F1_lambda[i].append(lambdify(vars, F1[i][l], 'numpy'))
 
-print(F1)
+# print(F1)
 
-F1_inv = [[] for i in range(n)]
-for i in range(n):
-    for l in range(n):
-        F1_inv[i].append(F1_lambda[i][l](vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8]))
+x0 = np.matrix([0, 0, 5, 10, 17.32050807568877, 5, 20, 0, 5], 'float').transpose()
+print(x0)
+iteration = 1
 
-F1_inv = np.matrix(F1_inv, 'float')
-print(F1_inv)
-F1_inv = inv(F1_inv)
-# print(F1_inv)
+while True:
+    F1_inv = [[] for i in range(n)]
+    for i in range(n):
+        for l in range(n):
+            F1_inv[i].append(F1_lambda[i][l](x0[0][0], x0[1][0], x0[2][0], x0[3][0], x0[4][0], x0[5][0], x0[6][0], x0[7][0], x0[8][0]))
+
+    F1_inv = np.matrix(F1_inv, 'float')
+    # print(F1_inv)
+    F1_inv = inv(F1_inv)
+    print(F1_inv)
+
+    for i in range(n):
+        F[i] = F_lambda[i](x0[0][0], x0[1][0], x0[2][0], x0[3][0], x0[4][0], x0[5][0], x0[6][0], x0[7][0], x0[8][0])
+    print(F)
+
+    N1 = np.dot(F1_inv, np.matrix(F, 'float'))
+    # print(N1)
+
+    xp = np.subtract(np.matrix(x0, 'float'), N1)
+    # print(xp)
+    # print(x0)
+    diff = np.linalg.norm(np.subtract(xp, x0))
+    print('%(iteration)d %(diff)f' % {"iteration": ++iteration, "diff": diff})
+    if np.linalg.norm(np.subtract(xp, x0)) <= e:
+        break
+    x0 = xp.copy()
+
+print(xp)
 
 # F2 = []
 # F2_lambda = []
