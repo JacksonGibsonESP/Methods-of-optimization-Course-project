@@ -84,9 +84,9 @@ while True:
 
     xp = np.subtract(x0, N1)
 
-    iteration = iteration + 1
+    iteration += 1
     diff = np.linalg.norm(np.subtract(xp, x0))
-    print('%(iteration)d %(diff)f' % {"iteration": ++iteration, "diff": diff})
+    print('%(iteration)d %(diff)f' % {"iteration": iteration, "diff": diff})
 
     if np.linalg.norm(np.subtract(xp, x0)) <= e:
         break
