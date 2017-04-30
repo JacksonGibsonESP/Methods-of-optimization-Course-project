@@ -2,12 +2,16 @@ from sympy import *
 import numpy as np
 from numpy.linalg import inv
 
+import matplotlib as mpl
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
 e = 0.01
 n = 9
-d = 20
+d = 15
 l1 = 5
-l2 = 5
-l3 = 5
+l2 = 7
+l3 = 10
 A1 = 0
 A2 = 0
 B1 = 10
@@ -61,35 +65,29 @@ for i in range(n):
         F1[i].append(F[i].diff(vars[l]))
         F1_lambda[i].append(lambdify(vars, F1[i][l], 'numpy'))
 
-# print(F1)
-
-x0 = np.matrix([0, 0, 5, 10, 17.32050807568877, 5, 20, 0, 5], 'float').transpose()
-print(x0)
-iteration = 1
+x0 = np.array([0., 0., 5., 10., 17.32050807568877, 5., 20., 0., 5.], 'float')
+iteration = 0
 
 while True:
     F1_inv = [[] for i in range(n)]
     for i in range(n):
         for l in range(n):
-            F1_inv[i].append(F1_lambda[i][l](x0[0][0], x0[1][0], x0[2][0], x0[3][0], x0[4][0], x0[5][0], x0[6][0], x0[7][0], x0[8][0]))
+            F1_inv[i].append(F1_lambda[i][l](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8]))
 
-    F1_inv = np.matrix(F1_inv, 'float')
-    # print(F1_inv)
+    F1_inv = np.array(F1_inv, 'float')
     F1_inv = inv(F1_inv)
-    print(F1_inv)
 
     for i in range(n):
-        F[i] = F_lambda[i](x0[0][0], x0[1][0], x0[2][0], x0[3][0], x0[4][0], x0[5][0], x0[6][0], x0[7][0], x0[8][0])
-    print(F)
+        F[i] = F_lambda[i](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])
 
-    N1 = np.dot(F1_inv, np.matrix(F, 'float'))
-    # print(N1)
+    N1 = np.dot(F1_inv, np.array(F, 'float'))
 
-    xp = np.subtract(np.matrix(x0, 'float'), N1)
-    # print(xp)
-    # print(x0)
+    xp = np.subtract(x0, N1)
+
+    iteration = iteration + 1
     diff = np.linalg.norm(np.subtract(xp, x0))
     print('%(iteration)d %(diff)f' % {"iteration": ++iteration, "diff": diff})
+
     if np.linalg.norm(np.subtract(xp, x0)) <= e:
         break
     x0 = xp.copy()
@@ -106,3 +104,40 @@ print(xp)
 #             print(F2[k * n ** 2 + i * n + l])
 #             F2_lambda.append(lambdify(x, F2[k * n ** 2 + i * n + l], 'numpy'))
 #         print()
+
+x = [A1, B1, C1, xp[0], xp[3], xp[6]]
+y = [A2, B2, C2, xp[1], xp[4], xp[7]]
+z = [0, 0, 0, xp[2], xp[5], xp[8]]
+mpl.rcParams['legend.fontsize'] = 10
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_zlabel('z')
+ax.plot(x, y, z, 'o', label='tripod', linestyle='none')
+ax.legend()
+plt.plot([A1, B1], [A2, B2], [0, 0], color='k', linestyle='-', linewidth=2)
+plt.plot([B1, C1], [B2, C2], [0, 0], color='k', linestyle='-', linewidth=2)
+plt.plot([A1, C1], [A2, C2], [0, 0], color='k', linestyle='-', linewidth=2)
+plt.plot([xp[0], xp[3]], [xp[1], xp[4]], [xp[2], xp[5]], color='k', linestyle='-', linewidth=2)
+plt.plot([xp[3], xp[6]], [xp[4], xp[7]], [xp[5], xp[8]], color='k', linestyle='-', linewidth=2)
+plt.plot([xp[0], xp[6]], [xp[1], xp[7]], [xp[2], xp[8]], color='k', linestyle='-', linewidth=2)
+plt.plot([A1, xp[0]], [A2, xp[1]], [0, xp[2]], color='k', linestyle='-', linewidth=2)
+plt.plot([B1, xp[3]], [B2, xp[4]], [0, xp[5]], color='k', linestyle='-', linewidth=2)
+plt.plot([C1, xp[6]], [C2, xp[7]], [0, xp[8]], color='k', linestyle='-', linewidth=2)
+plt.show()
+
+# print(np.linalg.norm(np.subtract([xp[0], xp[1], xp[2]], [xp[3], xp[4], xp[5]])))
+# print(np.linalg.norm(np.subtract([xp[3], xp[4], xp[5]], [xp[6], xp[7], xp[8]])))
+# print(np.linalg.norm(np.subtract([xp[0], xp[1], xp[2]], [xp[6], xp[7], xp[8]])))
+#
+#
+# print(sqrt(F_lambda[0](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[1](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[2](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[3](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[4](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[5](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[6](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[7](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
+# print(sqrt(F_lambda[8](xp[0], xp[1], xp[2], xp[3], xp[4], xp[5], xp[6], xp[7], xp[8])))
