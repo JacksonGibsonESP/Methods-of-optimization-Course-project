@@ -6,7 +6,7 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-e = 0.01
+e = 0.000001
 n = 9
 d = 15
 l1 = 5
@@ -65,9 +65,21 @@ for i in range(n):
         F1[i].append(F[i].diff(vars[l]))
         F1_lambda[i].append(lambdify(vars, F1[i][l], 'numpy'))
 
+F2 = [[[] for k in range(n)] for i in range(n)]
+F2_lambda = [[[] for k in range(n)] for i in range(n)]
+
+for k in range(n):
+    for i in range(n):
+        for l in range(n):
+            F2[k][i].append(F1[i][l].diff(vars[k]))
+            F2_lambda[k][i].append(lambdify(vars, F2[k][i][l], 'numpy'))
+
+F2 = np.array(F2, 'float')
+
 x0 = np.array([0., 0., 5., 10., 17.32050807568877, 5., 20., 0., 5.], 'float')
 iteration = 0
 
+# p = 2
 while True:
     F1_inv = [[] for i in range(n)]
     for i in range(n):
@@ -81,29 +93,24 @@ while True:
         F[i] = F_lambda[i](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])
 
     N1 = np.dot(F1_inv, np.array(F, 'float'))
+    N1 = N1.reshape(1, n)
 
-    xp = np.subtract(x0, N1)
+    N1_2 = np.matmul(N1.reshape(n, 1), N1)
+
+    N2 = np.matmul(F1_inv, (np.tensordot(F2, N1_2) * 0.5).reshape(9, 1)).reshape(1, n) + N1
+
+    xp = np.subtract(x0, N2)
 
     iteration += 1
     diff = np.linalg.norm(np.subtract(xp, x0))
-    print('%(iteration)d %(diff)f' % {"iteration": iteration, "diff": diff})
+    print('%(iteration)d %(diff)g' % {"iteration": iteration, "diff": diff})
 
-    if np.linalg.norm(np.subtract(xp, x0)) <= e:
+    if diff <= e:
         break
-    x0 = xp.copy()
+    x0 = xp.copy()[0]
 
+xp = xp[0]
 print(xp)
-
-# F2 = []
-# F2_lambda = []
-
-# for k in range(n):
-#     for i in range(n):
-#         for l in range(n):
-#             F2.append(F1[i * n + l].diff(x[k]))
-#             print(F2[k * n ** 2 + i * n + l])
-#             F2_lambda.append(lambdify(x, F2[k * n ** 2 + i * n + l], 'numpy'))
-#         print()
 
 x = [A1, B1, C1, xp[0], xp[3], xp[6]]
 y = [A2, B2, C2, xp[1], xp[4], xp[7]]
@@ -126,6 +133,36 @@ plt.plot([A1, xp[0]], [A2, xp[1]], [0, xp[2]], color='k', linestyle='-', linewid
 plt.plot([B1, xp[3]], [B2, xp[4]], [0, xp[5]], color='k', linestyle='-', linewidth=2)
 plt.plot([C1, xp[6]], [C2, xp[7]], [0, xp[8]], color='k', linestyle='-', linewidth=2)
 plt.show()
+
+x0 = np.array([0., 0., 5., 10., 17.32050807568877, 5., 20., 0., 5.], 'float')
+iteration = 0
+
+# p = 1
+while True:
+    F1_inv = [[] for i in range(n)]
+    for i in range(n):
+        for l in range(n):
+            F1_inv[i].append(F1_lambda[i][l](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8]))
+
+    F1_inv = np.array(F1_inv, 'float')
+    F1_inv = inv(F1_inv)
+
+    for i in range(n):
+        F[i] = F_lambda[i](x0[0], x0[1], x0[2], x0[3], x0[4], x0[5], x0[6], x0[7], x0[8])
+
+    N1 = np.dot(F1_inv, np.array(F, 'float'))
+
+    xp = np.subtract(x0, N1)
+
+    iteration += 1
+    diff = np.linalg.norm(np.subtract(xp, x0))
+    print('%(iteration)d %(diff)g' % {"iteration": iteration, "diff": diff})
+
+    if diff <= e:
+        break
+    x0 = xp.copy()
+
+print(xp)
 
 # print(np.linalg.norm(np.subtract([xp[0], xp[1], xp[2]], [xp[3], xp[4], xp[5]])))
 # print(np.linalg.norm(np.subtract([xp[3], xp[4], xp[5]], [xp[6], xp[7], xp[8]])))
